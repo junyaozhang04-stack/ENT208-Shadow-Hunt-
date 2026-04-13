@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
+  <title>Ancient Architecture Atlas</title>
+  <link rel="stylesheet" href="./map.css">
+</head>
+<body>
+  <main class="immersive-app">
+    <section class="world-stage" aria-labelledby="page-title">
+      <div id="map-canvas-stage" class="map-canvas-stage"></div>
+      <div id="marker-label-layer" class="marker-label-layer" aria-hidden="true"></div>
+
+      <div class="title-seal">
+        <p>Digital Heritage Atlas</p>
+        <h1 id="page-title">Ancient Architecture Atlas</h1>
+      </div>
+
+      <div class="scene-hint">
+        <span>Drag to orbit</span>
+        <span>Click a beacon to focus</span>
+        <button type="button" id="overview-button">Return to Map</button>
+      </div>
+    </section>
+
+    <aside class="detail-panel" aria-live="polite" aria-label="Site description">
+      <p class="eyebrow" id="building-region"></p>
+      <h2 id="building-name"></h2>
+      <p id="building-summary"></p>
+    </aside>
+
+    <button type="button" class="detail-launch" id="detail-launch">Enter 3D Detail</button>
+
+    <section class="pretext-portal" id="pretext-portal" aria-label="3D detail view" aria-hidden="true">
+      <button type="button" class="portal-close" id="portal-close">Return to Map</button>
+      <iframe id="pretext-frame" title="3D detail view"></iframe>
+    </section>
+
+    <div class="loading-veil" id="loading-veil">
+      <p>Entering the atlas</p>
+    </div>
+  </main>
+
+  <script type="module" src="./map.mjs"></script>
+</body>
+</html>

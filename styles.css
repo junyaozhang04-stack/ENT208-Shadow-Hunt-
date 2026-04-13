@@ -1,7 +1,7 @@
 :root {
-  --paper: rgba(233, 226, 216, 0.92);
-  --muted: rgba(233, 226, 216, 0.54);
-  --line: rgba(255, 255, 255, 0.22);
+  --paper: rgba(239, 232, 211, 0.92);
+  --muted: rgba(239, 232, 211, 0.56);
+  --line: rgba(197, 163, 90, 0.24);
 }
 
 * {
@@ -12,7 +12,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: #000;
+  background: #100d09;
   overflow: hidden;
 }
 
@@ -25,18 +25,25 @@ body {
   width: 100vw;
   height: 100vh;
   background:
-    radial-gradient(circle at 50% 62%, rgba(124, 89, 44, 0.14), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 15%),
-    #000;
+    radial-gradient(circle at 50% 58%, rgba(113, 82, 43, 0.26), transparent 30%),
+    radial-gradient(circle at 18% 70%, rgba(70, 50, 30, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(239, 232, 211, 0.035), transparent 18%),
+    #100d09;
   isolation: isolate;
   user-select: none;
   cursor: ew-resize;
+  touch-action: none;
 }
 
 .scene-layer,
 .copy-layer {
   position: absolute;
   inset: 0;
+}
+
+.scene-layer,
+.scene-layer canvas {
+  touch-action: none;
 }
 
 .scene-layer canvas {
@@ -59,6 +66,14 @@ body {
   text-wrap: nowrap;
   text-rendering: geometricPrecision;
   mix-blend-mode: screen;
+}
+
+.copy-line.is-visible {
+  transform: none;
+}
+
+.copy-line[data-emphasis="true"] {
+  text-shadow: 0 0 12px rgba(197, 163, 90, 0.18);
 }
 
 .copy-block {
@@ -159,7 +174,7 @@ body {
   padding: 10px 14px;
   color: var(--muted);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(16, 13, 9, 0.52);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 11px;
   line-height: 1;

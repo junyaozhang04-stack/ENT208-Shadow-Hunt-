@@ -1,13 +1,15 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { layoutNextLine, prepareWithSegments } from '/pretext.js'
+import { getBuildingById } from './building-data.mjs'
+import { createCameraGestureController } from './camera-gesture.mjs'
+import { computeLineFlowOffset } from './contour-flow.mjs'
 import {
   carveTextLineSlots,
   chooseSlot,
   clamp,
   getLayoutCacheKey,
   getMaskIntervalForBand,
-  getScrubPose,
   mergeIntervals,
   shouldJustifyLine,
   splitParagraphs,
@@ -24,9 +26,11 @@ const TITLE_FONT_SIZE_SMALL = 15
 const TITLE_LINE_HEIGHT_LARGE = 36
 const TITLE_LINE_HEIGHT_SMALL = 18
 const MIN_SLOT_WIDTH = 160
+const ACTIVE_BUILDING = getBuildingById(new URLSearchParams(window.location.search).get('building'))
+const MODEL_URL = ACTIVE_BUILDING?.modelUrl ?? './assets/model.glb'
 const SCRUB_RANGES = {
   yawRange: [-0.6, 0.4],
-  pitchRange: [0.02, 0.1],
+  pitchRange: [0.04, 0.85],
   distanceRange: [1.3, 0.4],
   panRange: [-0.6, 0.6],
 }
@@ -37,12 +41,14 @@ const POINTER_EASE = 5.2
 const MASK_PADDING = 20
 const MIN_JUSTIFY_WIDTH = 180
 const FRAME_Y_OFFSET = -0.32
+const DEBUG_CAMERA_PITCH = false
+const DEBUG_CAMERA_PITCH_INTERVAL_MS = 240
 const copyLayer = requireElement('copy-layer')
 const sceneLayer = requireElement('scene-layer')
 const scrubFill = requireElement('scrub-fill')
 const statusChip = requireElement('status-chip')
 
-const BLOCKS = [
+const TEMPLATE_BLOCKS = [
   {
     id: 'block-left',
     kicker: 'Template / Overview',
@@ -113,6 +119,56 @@ The silhouette should interrupt the page cleanly before it starts describing its
   },
 ]
 
+const BLOCKS = ACTIVE_BUILDING === null ? TEMPLATE_BLOCKS : createBuildingBlocks(ACTIVE_BUILDING)
+
+function createBuildingBlocks(building) {
+  const paragraphs = splitParagraphs(building.pretextText)
+  const [first = '', second = '', third = '', ...rest] = paragraphs
+  const closing = rest.length > 0 ? rest.join('\n\n') : third
+
+  return [
+    {
+      id: 'block-left',
+      kicker: building.pretextKicker,
+      title: building.pretextTitle,
+      bodyAlign: 'left',
+      titleAlign: 'left',
+      headerOffset: 22,
+      text: first,
+    },
+    {
+      id: 'block-center',
+      kicker: 'Material Memory',
+      title: `LIVING
+DETAIL`,
+      bodyAlign: 'left',
+      titleAlign: 'left',
+      headerOffset: 22,
+      text: second || building.summary,
+    },
+    {
+      id: 'block-right',
+      kicker: 'Digital Twin',
+      title: `MODEL
+VIEW`,
+      bodyAlign: 'left',
+      titleAlign: 'left',
+      headerOffset: 22,
+      text: third || building.pretextNote,
+    },
+    {
+      id: 'block-note',
+      kicker: building.region,
+      title: `SITE
+NOTE`,
+      bodyAlign: 'left',
+      titleAlign: 'left',
+      headerOffset: 22,
+      text: closing || building.pretextNote,
+    },
+  ]
+}
+
 const preparedBlocks = BLOCKS.map(block => {
   const titleLines = block.title.split(/\n+/).map(line => line.trim()).filter(Boolean)
   const leadLines = [
@@ -128,6 +184,7 @@ const preparedBlocks = BLOCKS.map(block => {
       slotHeight: KICKER_LINE_HEIGHT,
       advanceAfter: 8,
       align: 'left',
+      role: 'kicker',
     },
     ...titleLines.map((text, index) => {
       const isLead = block.id === 'block-left'
@@ -145,6 +202,7 @@ const preparedBlocks = BLOCKS.map(block => {
         slotHeight: isLead ? TITLE_LINE_HEIGHT_LARGE : TITLE_LINE_HEIGHT_SMALL,
         advanceAfter: index === 0 ? 0 : 4,
         align,
+        role: 'title',
       }
     }),
   ]
@@ -171,12 +229,15 @@ const maskScene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100)
 const maskCamera = camera.clone()
 const clock = new THREE.Clock()
-const pointer = {
-  dragging: false,
-  progress: 0.5,
-  target: 0.5,
-  startX: 0,
-  startProgress: 0.5,
+const orbit = {
+  yaw: { current: 0.5, target: 0.5 },
+  pitch: { current: 0.5, target: 0.5 },
+  zoom: { current: 0.58, target: 0.58 },
+}
+const gesture = {
+  pointers: new Map(),
+  dragAnchor: null,
+  pinchAnchor: null,
 }
 
 let modelRoot = null
@@ -186,17 +247,33 @@ let viewportWidth = window.innerWidth
 let viewportHeight = window.innerHeight
 let lastLayoutKey = ''
 let lastMask = null
+let hasUserInteracted = false
+let lastPitchDebugAt = 0
+const cameraGesture = createCameraGestureController({
+  getOrbitTargets: () => ({
+    yaw: orbit.yaw.target,
+    pitch: orbit.pitch.target,
+    zoom: orbit.zoom.target,
+  }),
+  onTargetsChange: nextTargets => {
+    orbit.yaw.target = nextTargets.yaw
+    orbit.pitch.target = nextTargets.pitch
+    orbit.zoom.target = nextTargets.zoom
+    hasUserInteracted = true
+  },
+})
 
 initScene()
 if (maskContext === null) {
   throw new Error('Unable to create a 2D context for the mask canvas.')
 }
 void loadModel()
+void cameraGesture.start()
 window.addEventListener('resize', handleResize)
-document.addEventListener('pointerdown', handlePointerDown)
-document.addEventListener('pointermove', handlePointerMove)
-document.addEventListener('pointerup', handlePointerUp)
-document.addEventListener('pointercancel', handlePointerUp)
+visibleRenderer.domElement.addEventListener('pointerdown', handlePointerDown)
+visibleRenderer.domElement.addEventListener('pointermove', handlePointerMove)
+visibleRenderer.domElement.addEventListener('pointerup', handlePointerUp)
+visibleRenderer.domElement.addEventListener('pointercancel', handlePointerUp)
 requestAnimationFrame(tick)
 
 function initScene() {
@@ -212,7 +289,7 @@ function initScene() {
   maskCanvas.width = MASK_SIZE.width
   maskCanvas.height = MASK_SIZE.height
 
-  scene.background = new THREE.Color(0x000000)
+  scene.background = new THREE.Color(0x100d09)
   maskScene.background = new THREE.Color(0x000000)
   maskScene.overrideMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff })
 
@@ -230,10 +307,10 @@ function initScene() {
 
 async function loadModel() {
   try {
-    statusChip.textContent = 'Loading model…'
+    statusChip.textContent = ACTIVE_BUILDING === null ? 'Loading model...' : `Loading ${ACTIVE_BUILDING.name}...`
 
     const loader = new GLTFLoader()
-    const gltf = await loader.loadAsync('./assets/model.glb')
+    const gltf = await loader.loadAsync(MODEL_URL)
     modelRoot = gltf.scene
     normalizeModel(modelRoot)
     scene.add(modelRoot)
@@ -242,7 +319,7 @@ async function loadModel() {
     maskScene.add(maskRoot)
 
     fitState = computeFitState(modelRoot, camera, viewportWidth, viewportHeight)
-    statusChip.textContent = 'Drag horizontally'
+    statusChip.textContent = ACTIVE_BUILDING === null ? 'Drag to rotate  Pinch to zoom' : `${ACTIVE_BUILDING.name}  Drag to rotate`
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown model load error.'
     statusChip.textContent = 'Model load failed'
@@ -254,7 +331,6 @@ function normalizeModel(root) {
   root.updateWorldMatrix(true, true)
   const box = new THREE.Box3().setFromObject(root)
   const size = box.getSize(new THREE.Vector3())
-  const center = box.getCenter(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z, 0.001)
   const scale = 7.8 / maxDim
   root.scale.setScalar(scale)
@@ -305,19 +381,67 @@ function handleResize() {
 }
 
 function handlePointerDown(event) {
-  pointer.dragging = true
-  pointer.startX = event.clientX
-  pointer.startProgress = pointer.target
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+
+  event.preventDefault()
+  hasUserInteracted = true
+  gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+  visibleRenderer.domElement.setPointerCapture(event.pointerId)
+
+  if (gesture.pointers.size === 1) {
+    const pointer = gesture.pointers.get(event.pointerId)
+    if (pointer) resetDragAnchor(pointer)
+    return
+  }
+
+  resetPinchAnchor()
 }
 
 function handlePointerMove(event) {
-  if (!pointer.dragging) return
-  const dx = (event.clientX - pointer.startX) / viewportWidth
-  pointer.target = clamp(pointer.startProgress + dx, 0, 1)
+  if (!gesture.pointers.has(event.pointerId)) return
+
+  event.preventDefault()
+  gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+  if (gesture.pointers.size >= 2) {
+    if (gesture.pinchAnchor === null) resetPinchAnchor()
+    const [first, second] = getPrimaryPointers()
+    if (first === null || second === null || gesture.pinchAnchor === null) return
+
+    const distanceDelta = (getPointerDistance(first, second) - gesture.pinchAnchor.distance) / Math.max(viewportWidth, viewportHeight)
+    orbit.zoom.target = clamp(gesture.pinchAnchor.zoom - distanceDelta * 1.8, 0, 1)
+    return
+  }
+
+  if (gesture.dragAnchor === null) return
+
+  const activePointer = gesture.pointers.get(event.pointerId)
+  if (!activePointer) return
+
+  const dx = (activePointer.x - gesture.dragAnchor.x) / viewportWidth
+  const dy = (activePointer.y - gesture.dragAnchor.y) / viewportHeight
+  orbit.yaw.target = clamp(gesture.dragAnchor.yaw + dx * 1.4, 0, 1)
+  orbit.pitch.target = clamp(gesture.dragAnchor.pitch - dy * 0.85, 0.22, 0.78)
 }
 
-function handlePointerUp() {
-  pointer.dragging = false
+function handlePointerUp(event) {
+  gesture.pointers.delete(event.pointerId)
+
+  if (visibleRenderer.domElement.hasPointerCapture(event.pointerId)) {
+    visibleRenderer.domElement.releasePointerCapture(event.pointerId)
+  }
+
+  if (gesture.pointers.size === 0) {
+    gesture.dragAnchor = null
+    gesture.pinchAnchor = null
+    return
+  }
+
+  if (gesture.pointers.size === 1) {
+    gesture.pinchAnchor = null
+    const [remainingPointer] = getPrimaryPointers()
+    if (remainingPointer !== null) resetDragAnchor(remainingPointer)
+  }
 }
 
 function tick() {
@@ -325,34 +449,45 @@ function tick() {
   if (modelRoot === null || maskRoot === null || fitState === null) return
 
   const dt = clock.getDelta()
-  const idleTarget = 0.5 + Math.sin(performance.now() * 0.0002) * 0.05
-  pointer.target = pointer.dragging ? pointer.target : idleTarget
-  pointer.progress += (pointer.target - pointer.progress) * clamp(dt * 5.0, 0.02, 0.1)
-  scrubFill.style.width = '100%'
-  scrubFill.style.transform = `scaleX(${clamp(pointer.progress, 0, 1)})`
+  if (!hasUserInteracted && gesture.pointers.size === 0) {
+    orbit.yaw.target = 0.5 + Math.sin(performance.now() * IDLE_SPEED) * IDLE_SWAY
+  }
 
-  updatePose(pointer.progress)
+  orbit.yaw.current += (orbit.yaw.target - orbit.yaw.current) * clamp(dt * POINTER_EASE, 0.02, 0.12)
+  orbit.pitch.current += (orbit.pitch.target - orbit.pitch.current) * clamp(dt * POINTER_EASE, 0.02, 0.12)
+  orbit.zoom.current += (orbit.zoom.target - orbit.zoom.current) * clamp(dt * (POINTER_EASE + 1.2), 0.02, 0.16)
+  debugPitchState()
+
+  scrubFill.style.width = '100%'
+  scrubFill.style.transform = `scaleX(${clamp(orbit.yaw.current, 0, 1)})`
+
+  updatePose(orbit.yaw.current, orbit.pitch.current, orbit.zoom.current)
   renderScene()
   layoutCopy(renderMask())
 }
 
-function updatePose(progress) {
-  const pose = getScrubPose(progress, SCRUB_RANGES)
+function updatePose(yawProgress, pitchProgress, zoomProgress) {
+  const yaw = THREE.MathUtils.lerp(SCRUB_RANGES.yawRange[0], SCRUB_RANGES.yawRange[1], yawProgress)
+  const pitch = THREE.MathUtils.lerp(SCRUB_RANGES.pitchRange[0], SCRUB_RANGES.pitchRange[1], pitchProgress)
+  const distanceScale = THREE.MathUtils.lerp(SCRUB_RANGES.distanceRange[0], SCRUB_RANGES.distanceRange[1], zoomProgress)
+  const panX = THREE.MathUtils.lerp(SCRUB_RANGES.panRange[0], SCRUB_RANGES.panRange[1], yawProgress)
   const target = fitState.target.clone()
-  target.x += pose.panX
+  target.x += panX
+  target.y -= THREE.MathUtils.lerp(0.04, 0.28, pitchProgress)
 
-  const distance = fitState.baseDistance * pose.distance
-  const cosPitch = Math.cos(pose.pitch)
+  const distance = fitState.baseDistance * distanceScale
+  const cosPitch = Math.cos(pitch)
   const position = new THREE.Vector3(
-    Math.sin(pose.yaw) * distance * cosPitch,
-    Math.sin(pose.pitch) * distance + target.y,
-    Math.cos(pose.yaw) * distance * cosPitch,
+    Math.sin(yaw) * distance * cosPitch,
+    Math.sin(pitch) * distance + target.y,
+    Math.cos(yaw) * distance * cosPitch,
   )
 
   camera.position.copy(position)
   camera.lookAt(target)
   maskCamera.position.copy(camera.position)
   maskCamera.quaternion.copy(camera.quaternion)
+  debugAppliedPitch(pitch)
 }
 
 function renderScene() {
@@ -370,7 +505,7 @@ function renderMask() {
 
 function layoutCopy(mask) {
   const regions = getRegions(viewportWidth, viewportHeight)
-  const layoutKey = getLayoutCacheKey(viewportWidth, viewportHeight, pointer.progress)
+  const layoutKey = `${getLayoutCacheKey(viewportWidth, viewportHeight, orbit.yaw.current)}:${orbit.pitch.current.toFixed(4)}:${orbit.zoom.current.toFixed(4)}`
   if (layoutKey === lastLayoutKey) return
   lastLayoutKey = layoutKey
 
@@ -397,6 +532,8 @@ function layoutCopy(mask) {
     node.style.letterSpacing = line.letterSpacing
     node.style.fontWeight = line.fontWeight
     node.style.textTransform = line.textTransform
+    node.dataset.role = line.role ?? 'body'
+    node.dataset.emphasis = line.emphasis ? 'true' : 'false'
   }
 }
 
@@ -469,9 +606,30 @@ function layoutBlock(block, region, mask) {
         wordSpacing = `${Math.floor(rawSpace * 10) / 10}px`
       }
 
+      const flowOffset = computeLineFlowOffset({
+        mask,
+        bandTop: y - 4,
+        bandBottom: y + BODY_LINE_HEIGHT + 2,
+        viewportWidth,
+        viewportHeight,
+        occupiedInterval: interval,
+        slot,
+        lineX: slot.left,
+        lineWidth: Math.max(line.width, slotWidth),
+        options: {
+          maxDistance: 164,
+          normalShift: 9,
+          tangentShift: 6,
+          verticalShift: 2,
+          threshold: 26,
+        },
+      })
+
       lines.push({
-        x: Math.round(slot.left),
-        y: Math.round(y),
+        x: Math.round(slot.left + flowOffset.x),
+        y: Math.round(y + flowOffset.y),
+        role: 'body',
+        emphasis: containsKeyword(line.text),
         text: line.text,
         width: line.width,
         slotWidth: Math.floor(slotWidth),
@@ -547,6 +705,8 @@ function placeFlowLine(lineSpec, region, mask, y, fallbackLineHeight, options = 
         letterSpacing: lineSpec.letterSpacing,
         fontWeight: lineSpec.fontWeight,
         textTransform: lineSpec.textTransform,
+        role: lineSpec.role ?? 'title',
+        emphasis: false,
       },
       nextY: currentY + lineHeight + (lineSpec.advanceAfter ?? 0),
     }
@@ -577,12 +737,72 @@ function getRegions(width, height) {
   ]
 }
 
+function resetDragAnchor(pointer) {
+  gesture.dragAnchor = {
+    x: pointer.x,
+    y: pointer.y,
+    yaw: orbit.yaw.target,
+    pitch: orbit.pitch.target,
+  }
+}
+
+function resetPinchAnchor() {
+  const [first, second] = getPrimaryPointers()
+  if (first === null || second === null) {
+    gesture.pinchAnchor = null
+    return
+  }
+
+  gesture.pinchAnchor = {
+    distance: getPointerDistance(first, second),
+    zoom: orbit.zoom.target,
+  }
+  gesture.dragAnchor = null
+}
+
+function getPrimaryPointers() {
+  const pointers = [...gesture.pointers.values()]
+  if (pointers.length === 0) return [null, null]
+  if (pointers.length === 1) return [pointers[0], null]
+  return [pointers[0], pointers[1]]
+}
+
+function getPointerDistance(first, second) {
+  return Math.hypot(second.x - first.x, second.y - first.y)
+}
+
+function containsKeyword(text) {
+  return /\b(mask|motion|silhouette|model|void)\b/i.test(text)
+}
+
+function debugPitchState() {
+  if (!DEBUG_CAMERA_PITCH) return
+  const now = performance.now()
+  if (now - lastPitchDebugAt < DEBUG_CAMERA_PITCH_INTERVAL_MS) return
+  console.log('[orbit-pitch]', {
+    pitchTarget: orbit.pitch.target,
+    pitchCurrent: orbit.pitch.current,
+  })
+}
+
+function debugAppliedPitch(pitch) {
+  if (!DEBUG_CAMERA_PITCH) return
+  const now = performance.now()
+  if (now - lastPitchDebugAt < DEBUG_CAMERA_PITCH_INTERVAL_MS) return
+  lastPitchDebugAt = now
+  console.log('[update-pose]', {
+    pitch,
+    cameraY: camera.position.y,
+  })
+}
+
 function syncLinePool(count) {
   while (linePool.length < count) {
     const node = document.createElement('div')
     node.className = 'copy-line'
     copyLayer.appendChild(node)
     linePool.push(node)
+    requestAnimationFrame(() => node.classList.add('is-visible'))
   }
 
   while (linePool.length > count) {
