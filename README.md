@@ -1,138 +1,105 @@
-# ENT208-Shadow-Hunt
+# ENT208 Shadow Hunt
 
-## Scope Change Notice
+## Project Direction Notice
 
-This project has changed direction.
+This repository has changed direction.
 
-- `main` now contains the final version of the new `pretext-3d` project.
-- `old-version-backup` preserves the previous repository contents for reference only.
-- The old version is no longer the active direction of this repository.
+- `main` contains the final version of the project.
+- `old-version-backup` preserves the previous project for reference only.
+- New review, deployment, and grading should use `main`.
 
-# pretext-3d
+## Ancient Architecture Atlas
 
-`pretext-3d` is an open-source template for building editorial web pages where live 3D geometry actively shapes the text layout.
+Ancient Architecture Atlas is an interactive 3D web experience about Chinese architectural heritage. The project presents a cinematic map of historic sites, lets visitors focus on individual buildings, and opens a detailed 3D reading view where text flows around the live silhouette of each model.
 
-This is the important difference: the 3D model is not a background layer, and Pretext is not being used as a static text formatter. The visible silhouette of the model becomes a real layout constraint. As the camera moves, the occupied shape changes, the legal text slots change, and Pretext recomposes the copy so the page stays readable.
+The final project combines Three.js, Vite, and a Pretext-powered layout system to create a digital heritage interface that is both visual and readable.
 
-That makes this project more than a visual demo. It is a small layout engine for a type of web storytelling that is usually painful to build from scratch.
+## Features
 
-## Why This Matters
+- Interactive 3D atlas map with clickable heritage markers.
+- Detail panel for each selected architecture site.
+- Embedded 3D model viewer for selected buildings.
+- Text layout that responds to the visible silhouette of the model.
+- Gesture controls for orbiting and inspecting models.
+- Production-ready Vite build configuration for Netlify.
 
-Most so-called `3D + editorial` pages still work like posters:
+## Featured Sites
 
-- the 3D object is decorative
-- the text is placed in fixed columns
-- collisions are solved manually
-- every new model means another round of hand-tuned layout hacks
+- Foguang Monastery, Shanxi
+- Huize Confucian Temple, Yunnan
+- Wuhu Henglang Ancient Pagoda, Anhui
 
-`pretext-3d` takes a different route.
+## Tech Stack
 
-It treats the rendered 3D subject as a live spatial obstacle and lets Pretext flow text around the current silhouette in real time. That is the conceptual jump. You are no longer placing copy on top of a scene. You are composing a page where geometry and typography negotiate with each other frame by frame.
-
-For Pretext specifically, this shows a more radical use case than standard text layout. Instead of reflowing inside a rectangular text box, Pretext is driving copy through irregular, moving slots extracted from a 3D mask. In practice, that turns Pretext from a formatting utility into a programmable editorial layout system.
-
-## Why This Is Useful
-
-This pattern is valuable anywhere the object itself should structure the narrative:
-
-- editorial storytelling
-- brand showcases
-- museum or exhibition microsites
-- architecture and product presentations
-- portfolio pages with stronger art direction
-- experimental publishing on the web
-
-The value is not just aesthetics. The value is that the page can stay legible while still feeling spatial, cinematic, and alive.
-
-Without a template like this, building the same effect is annoying in exactly the wrong ways:
-
-- you need to render and normalize a 3D model
-- you need a mask pipeline
-- you need to scan geometry occupancy into usable layout intervals
-- you need text reflow that can survive irregular line widths
-- you need motion that changes the composition without destroying readability
-- you need model-swap ergonomics so every new asset does not become a rewrite
-
-That is the work this repository is trying to remove.
-
-## What The Template Actually Does
-
-At runtime, the system works like this:
-
-1. Render a `glb` model with Three.js
-2. Render the same scene into a high-contrast black and white mask
-3. Scan each text band for occupied pixels
-4. Convert the remaining horizontal runs into legal line slots
-5. Ask Pretext for the next valid line inside each slot
-6. Reflow the copy again as the camera motion changes the silhouette
-
-Core flow:
-
-`GLB -> Three.js scene -> silhouette mask -> slot carving -> Pretext line layout -> positioned editorial copy`
-
-## What You Get Out Of The Box
-
-- a working `Three.js + Pretext` integration
-- live mask-based text exclusion from a moving 3D subject
-- a restrained horizontal scrub interaction that preserves readability
-- model normalization and framing hooks
-- adjustable layout quality controls such as mask padding and minimum slot width
-- private model workflow: `assets/model.glb` is expected locally but ignored by git
-
-## Why Building This Yourself Is Annoying
-
-Individually, none of the parts are impossible. Together, they are easy to get wrong.
-
-The hard part is not loading a model or rendering text. The hard part is getting all of these layers to cooperate:
-
-- the model has to be framed consistently
-- the mask has to be clean enough to produce usable slots
-- the slot carving has to ignore noisy fragments
-- the text engine has to accept constantly changing widths
-- the motion range has to feel alive without wrecking the composition
-
-That is why a reusable starting point matters here. If someone wants to explore `3D + Pretext`, this repository skips the boring and fragile integration work and gets them directly to the part that matters: choosing a subject, tuning the composition, and writing the page.
-
-## Stack
-
-- `Three.js`
+- Three.js
+- Vite
 - `@chenglou/pretext`
-- `Vite`
+- JavaScript modules
+- Netlify deployment
 
-## Getting Started
+## Local Setup
+
+Install dependencies:
 
 ```bash
 pnpm install
+```
+
+Run the local development server:
+
+```bash
 pnpm dev
 ```
 
-Open `http://127.0.0.1:4173/`.
+Open the local site at:
 
-## Add Your Own Model
+```text
+http://127.0.0.1:4173/
+```
 
-Put your model at `assets/model.glb`.
+The root page redirects to the atlas map.
 
-The `assets/` directory is kept in the repo, but `.glb` files are ignored, so you can work with private 3D assets without publishing them.
+## Build
 
-When a new model looks wrong, the first places to touch are:
-
-- `normalizeModel()` in `main.mjs`
-- `SCRUB_RANGES` in `main.mjs`
-- `computeFitState()` in `main.mjs`
-- the layout quality knobs in `main.mjs` and `mask-layout.mjs`
-
-See `MODEL_SWAP.md` for the model tuning workflow.
-
-## Check
+Create a production build:
 
 ```bash
-pnpm check
 pnpm build
 ```
 
+Preview or upload the generated `dist` folder.
+
+Run checks:
+
+```bash
+pnpm check
+```
+
+## Netlify Deployment
+
+This repository includes `netlify.toml`.
+
+Netlify should use:
+
+```text
+Build command: pnpm build
+Publish directory: dist
+```
+
+If deploying manually, do not upload the source folder directly. Run `pnpm build` first, then upload the generated `dist` folder.
+
+## Important Asset Note
+
+The 3D model files are loaded through Vite asset URLs so they are included in the production build. If a model page shows `MODEL LOAD FAILED`, check that the deployed `dist/assets` folder contains the generated `.glb` files.
+
 ## Key Files
 
-- `main.mjs` for scene setup, mask generation, camera motion, and layout orchestration
-- `mask-layout.mjs` for slot carving and layout helpers
-- `styles.css` for the visual system
-- `MODEL_SWAP.md` for model swap and tuning notes
+- `map.html` and `map.mjs` power the atlas map.
+- `index.html` and `main.mjs` power the 3D detail view.
+- `building-data.mjs` stores site metadata and model references.
+- `mask-layout.mjs` handles text-slot carving around model silhouettes.
+- `MODEL_SWAP.md` documents model replacement and tuning.
+
+## Previous Version
+
+The previous repository contents are preserved in the `old-version-backup` branch. They are kept only for reference and are not the active project direction.
