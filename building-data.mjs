@@ -6,7 +6,7 @@ export const buildings = [
     position: { x: 57, y: 33 },
     shape: 'temple',
     accent: 0xc5a35a,
-    modelUrl: './assets/buildings/fogu-an-temple/model.glb',
+    modelUrl: new URL('./assets/buildings/fogu-an-temple/model.glb', import.meta.url).href,
     expectedModelUrl: './assets/buildings/fogu-an-temple/model.glb',
     summary: 'A Tang dynasty timber hall whose roof, bracket sets, sculptures, murals, and inscriptions turned architectural history into a living conversation across time.',
     facts: [
@@ -34,7 +34,7 @@ The name Foguang Si means "Temple of Buddha's Light." For centuries, that light 
     position: { x: 45, y: 69 },
     shape: 'courtyard',
     accent: 0x9fd8ca,
-    modelUrl: './assets/buildings/huize-confucian-temple/model.glb',
+    modelUrl: new URL('./assets/buildings/huize-confucian-temple/model.glb', import.meta.url).href,
     expectedModelUrl: './assets/buildings/huize-confucian-temple/model.glb',
     summary: 'A Qing dynasty ritual and educational complex where temple architecture, local copper craft, and living school culture still overlap.',
     facts: [
@@ -61,7 +61,7 @@ Beyond the main hall lies the Chongsheng Shrine, where a coffered ceiling featur
     position: { x: 66, y: 61 },
     shape: 'pagoda',
     accent: 0xb76b4c,
-    modelUrl: './assets/buildings/hengling-pogoda/model.glb',
+    modelUrl: new URL('./assets/buildings/hengling-pogoda/model.glb', import.meta.url).href,
     expectedModelUrl: './assets/buildings/hengling-pogoda/model.glb',
     summary: 'A seven-story Southern Song brick pagoda near Wuhu, leaning slightly above the Qingyi River after centuries of war, weather, and repair.',
     facts: [

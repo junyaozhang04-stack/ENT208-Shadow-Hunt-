@@ -27,7 +27,7 @@ const TITLE_LINE_HEIGHT_LARGE = 36
 const TITLE_LINE_HEIGHT_SMALL = 18
 const MIN_SLOT_WIDTH = 160
 const ACTIVE_BUILDING = getBuildingById(new URLSearchParams(window.location.search).get('building'))
-const MODEL_URL = ACTIVE_BUILDING?.modelUrl ?? './assets/model.glb'
+const MODEL_URL = ACTIVE_BUILDING?.modelUrl
 const SCRUB_RANGES = {
   yawRange: [-0.6, 0.4],
   pitchRange: [0.04, 0.85],
@@ -308,6 +308,9 @@ function initScene() {
 async function loadModel() {
   try {
     statusChip.textContent = ACTIVE_BUILDING === null ? 'Loading model...' : `Loading ${ACTIVE_BUILDING.name}...`
+    if (!MODEL_URL) {
+      throw new Error('No model selected.')
+    }
 
     const loader = new GLTFLoader()
     const gltf = await loader.loadAsync(MODEL_URL)

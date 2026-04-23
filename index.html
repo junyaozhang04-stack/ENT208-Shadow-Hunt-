@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    if (!new URLSearchParams(window.location.search).has('building')) {
+      window.location.replace('./map.html')
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
-  <title>Pretext 3D</title>
+  <title>3D Detail View</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -14,7 +19,7 @@
     <div class="scrub-track">
       <div class="scrub-fill" id="scrub-fill"></div>
     </div>
-    <div class="status-chip" id="status-chip">Loading model…</div>
+    <div class="status-chip" id="status-chip">Loading model...</div>
   </main>
 
   <script type="module" src="./main.mjs"></script>

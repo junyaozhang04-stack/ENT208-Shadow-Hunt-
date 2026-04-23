@@ -113,7 +113,8 @@ function addLights() {
 }
 
 function addWorld() {
-  const texture = new THREE.TextureLoader().load('./Gemini_Generated_Image_3852yl3852yl3852.svg', () => {
+  const textureUrl = new URL('./Gemini_Generated_Image_3852yl3852yl3852.svg', import.meta.url).href
+  const texture = new THREE.TextureLoader().load(textureUrl, () => {
     texture.colorSpace = THREE.SRGBColorSpace
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
   })
