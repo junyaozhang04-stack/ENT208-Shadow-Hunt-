@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { layoutNextLine, prepareWithSegments } from '/pretext.js'
 import { getBuildingById } from './building-data.mjs'
+import { isBuildingCompleted, markBuildingCompleted, postFootprintUpdate } from './footprint-store.mjs'
 import { createCameraGestureController } from './camera-gesture.mjs'
 import { computeLineFlowOffset } from './contour-flow.mjs'
 import {
@@ -43,10 +44,25 @@ const MIN_JUSTIFY_WIDTH = 180
 const FRAME_Y_OFFSET = -0.32
 const DEBUG_CAMERA_PITCH = false
 const DEBUG_CAMERA_PITCH_INTERVAL_MS = 240
+const READING_BUCKET_COUNT = 6
+const READING_BUCKET_TARGET = 4
+const LOADING_FACTS = [
+  'Sweeping roofs (Feiyan) do more than please the eye; they cast rainwater far from the timber structure.',
+  'Dougong brackets transfer the immense weight of the roof to the columns without a single iron nail.',
+  'Chinese timber frames are incredibly flexible, designed to dance with the earth during seismic events.',
+  'Constructing the digital twin of structural bays into space.',
+  'Unlike rigid stone, traditional Chinese architecture emphasizes horizontal harmony with its surroundings.',
+]
 const copyLayer = requireElement('copy-layer')
 const sceneLayer = requireElement('scene-layer')
 const scrubFill = requireElement('scrub-fill')
 const statusChip = requireElement('status-chip')
+const modelLoader = requireElement('model-loader')
+const modelLoaderPercent = requireElement('model-loader-percent')
+const modelLoaderFact = requireElement('model-loader-fact')
+const appEl = requireElement('app')
+const btnRead = requireElement('btn-read')
+const btnExplore = requireElement('btn-explore')
 
 const TEMPLATE_BLOCKS = [
   {
@@ -249,6 +265,13 @@ let lastLayoutKey = ''
 let lastMask = null
 let hasUserInteracted = false
 let lastPitchDebugAt = 0
+let loadingProgress = 0
+let loadingTimer = 0
+let loadingFactTimer = 0
+let loadingFactSwapTimer = 0
+let isExploreMode = false
+let modeDistanceMult = { current: 1.35, target: 1.35 }
+const readingState = createReadingState(ACTIVE_BUILDING)
 const cameraGesture = createCameraGestureController({
   getOrbitTargets: () => ({
     yaw: orbit.yaw.target,
@@ -256,6 +279,7 @@ const cameraGesture = createCameraGestureController({
     zoom: orbit.zoom.target,
   }),
   onTargetsChange: nextTargets => {
+    if (!isExploreMode) return
     orbit.yaw.target = nextTargets.yaw
     orbit.pitch.target = nextTargets.pitch
     orbit.zoom.target = nextTargets.zoom
@@ -303,17 +327,36 @@ function initScene() {
   camera.position.set(0, 1.3, 10)
   camera.lookAt(0, 1.2, 0)
   handleResize()
+
+  btnRead.addEventListener('click', () => {
+    isExploreMode = false
+    modeDistanceMult.target = 1.35
+    appEl.classList.remove('is-explore-mode')
+    btnRead.classList.add('active')
+    btnExplore.classList.remove('active')
+    orbit.yaw.target = 0.5
+    orbit.pitch.target = 0.5
+  })
+
+  btnExplore.addEventListener('click', () => {
+    isExploreMode = true
+    modeDistanceMult.target = 1.1
+    appEl.classList.add('is-explore-mode')
+    btnExplore.classList.add('active')
+    btnRead.classList.remove('active')
+  })
 }
 
 async function loadModel() {
   try {
     statusChip.textContent = ACTIVE_BUILDING === null ? 'Loading model...' : `Loading ${ACTIVE_BUILDING.name}...`
+    startModelLoading()
     if (!MODEL_URL) {
       throw new Error('No model selected.')
     }
 
     const loader = new GLTFLoader()
-    const gltf = await loader.loadAsync(MODEL_URL)
+    const gltf = await loader.loadAsync(MODEL_URL, handleModelProgress)
     modelRoot = gltf.scene
     normalizeModel(modelRoot)
     scene.add(modelRoot)
@@ -322,12 +365,123 @@ async function loadModel() {
     maskScene.add(maskRoot)
 
     fitState = computeFitState(modelRoot, camera, viewportWidth, viewportHeight)
+    completeModelLoading()
     statusChip.textContent = ACTIVE_BUILDING === null ? 'Drag to rotate  Pinch to zoom' : `${ACTIVE_BUILDING.name}  Drag to rotate`
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown model load error.'
     statusChip.textContent = 'Model load failed'
+    failModelLoading(message)
     console.error(message)
   }
+}
+
+function startModelLoading() {
+  loadingProgress = 0
+  modelLoader.classList.remove('is-hidden', 'is-error')
+  modelLoaderPercent.parentElement?.classList.remove('is-error')
+  window.clearTimeout(loadingFactSwapTimer)
+  cycleLoadingFact()
+  setModelLoadingProgress(0)
+
+  window.clearInterval(loadingTimer)
+  window.clearInterval(loadingFactTimer)
+  loadingTimer = window.setInterval(() => {
+    const nextProgress = loadingProgress + Math.max(0.4, (92 - loadingProgress) * 0.035)
+    setModelLoadingProgress(Math.min(nextProgress, 92))
+  }, 180)
+  loadingFactTimer = window.setInterval(cycleLoadingFact, 3500)
+}
+
+function handleModelProgress(event) {
+  if (!event.lengthComputable && event.total <= 0) return
+  const progress = (event.loaded / event.total) * 100
+  setModelLoadingProgress(Math.min(progress, 98))
+}
+
+function completeModelLoading() {
+  window.clearInterval(loadingTimer)
+  window.clearInterval(loadingFactTimer)
+  window.clearTimeout(loadingFactSwapTimer)
+  setModelLoadingProgress(100)
+  window.setTimeout(() => {
+    modelLoader.classList.add('is-hidden')
+  }, 420)
+}
+
+function failModelLoading(message) {
+  window.clearInterval(loadingTimer)
+  window.clearInterval(loadingFactTimer)
+  window.clearTimeout(loadingFactSwapTimer)
+  modelLoader.classList.add('is-error')
+  modelLoaderPercent.parentElement?.classList.add('is-error')
+  modelLoaderPercent.textContent = 'Failed'
+  modelLoaderFact.textContent = `The model could not be assembled: ${message}`
+  modelLoaderFact.classList.add('visible')
+}
+
+function setModelLoadingProgress(progress) {
+  loadingProgress = clamp(progress, 0, 100)
+  modelLoaderPercent.textContent = `${Math.round(loadingProgress)}`
+}
+
+function cycleLoadingFact() {
+  modelLoaderFact.classList.remove('visible')
+  window.clearTimeout(loadingFactSwapTimer)
+  loadingFactSwapTimer = window.setTimeout(() => {
+    const seed = ACTIVE_BUILDING?.id?.length ?? 0
+    const index = (Math.floor(performance.now() / 3500) + seed) % LOADING_FACTS.length
+    modelLoaderFact.textContent = `"${LOADING_FACTS[index]}"`
+    modelLoaderFact.classList.add('visible')
+  }, 800)
+}
+
+function createReadingState(building) {
+  const wordCount = building?.pretextText?.trim().split(/\s+/).filter(Boolean).length ?? 0
+  return {
+    completed: building ? isBuildingCompleted(building.id) : false,
+    requiredMs: clamp(wordCount * 34, 12000, 22000),
+    dwellMs: 0,
+    exploredBuckets: new Set(),
+  }
+}
+
+function updateReadingProgress(dt) {
+  if (ACTIVE_BUILDING === null) return
+  if (readingState.completed) {
+    statusChip.textContent = `Stamp collected  ${ACTIVE_BUILDING.stamp.componentEn}`
+    return
+  }
+
+  if (document.visibilityState === 'visible') {
+    readingState.dwellMs += dt * 1000
+  }
+
+  if (hasUserInteracted) {
+    readingState.exploredBuckets.add(getReadingBucket(orbit.yaw.current))
+  }
+
+  const dwellProgress = clamp(readingState.dwellMs / readingState.requiredMs, 0, 1)
+  const exploreProgress = clamp(readingState.exploredBuckets.size / READING_BUCKET_TARGET, 0, 1)
+  const displayProgress = Math.min(dwellProgress * 0.72 + exploreProgress * 0.28, 0.99)
+  statusChip.textContent = `Reading survey  ${Math.round(displayProgress * 100)}%`
+
+  if (dwellProgress < 1 || exploreProgress < 1) return
+  unlockFootprintStamp()
+}
+
+function getReadingBucket(progress) {
+  const scaled = Math.floor(clamp(progress, 0, 0.9999) * READING_BUCKET_COUNT)
+  return clamp(scaled, 0, READING_BUCKET_COUNT - 1)
+}
+
+function unlockFootprintStamp() {
+  if (ACTIVE_BUILDING === null || readingState.completed) return
+  readingState.completed = true
+  const result = markBuildingCompleted(ACTIVE_BUILDING)
+  if (result.changed) {
+    postFootprintUpdate(result.entry)
+  }
+  statusChip.textContent = `Stamp collected  ${ACTIVE_BUILDING.stamp.componentEn}`
 }
 
 function normalizeModel(root) {
@@ -385,6 +539,7 @@ function handleResize() {
 
 function handlePointerDown(event) {
   if (event.pointerType === 'mouse' && event.button !== 0) return
+  if (!isExploreMode) return
 
   event.preventDefault()
   hasUserInteracted = true
@@ -459,12 +614,14 @@ function tick() {
   orbit.yaw.current += (orbit.yaw.target - orbit.yaw.current) * clamp(dt * POINTER_EASE, 0.02, 0.12)
   orbit.pitch.current += (orbit.pitch.target - orbit.pitch.current) * clamp(dt * POINTER_EASE, 0.02, 0.12)
   orbit.zoom.current += (orbit.zoom.target - orbit.zoom.current) * clamp(dt * (POINTER_EASE + 1.2), 0.02, 0.16)
+  modeDistanceMult.current += (modeDistanceMult.target - modeDistanceMult.current) * clamp(dt * 3.5, 0.02, 0.12)
   debugPitchState()
 
   scrubFill.style.width = '100%'
   scrubFill.style.transform = `scaleX(${clamp(orbit.yaw.current, 0, 1)})`
 
   updatePose(orbit.yaw.current, orbit.pitch.current, orbit.zoom.current)
+  updateReadingProgress(dt)
   renderScene()
   layoutCopy(renderMask())
 }
@@ -478,7 +635,7 @@ function updatePose(yawProgress, pitchProgress, zoomProgress) {
   target.x += panX
   target.y -= THREE.MathUtils.lerp(0.04, 0.28, pitchProgress)
 
-  const distance = fitState.baseDistance * distanceScale
+  const distance = fitState.baseDistance * distanceScale * modeDistanceMult.current
   const cosPitch = Math.cos(pitch)
   const position = new THREE.Vector3(
     Math.sin(yaw) * distance * cosPitch,

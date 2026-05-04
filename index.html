@@ -19,7 +19,23 @@
     <div class="scrub-track">
       <div class="scrub-fill" id="scrub-fill"></div>
     </div>
+    <div class="mode-toggle" id="mode-toggle">
+      <button class="mode-btn active" id="btn-read">Read Story</button>
+      <button class="mode-btn" id="btn-explore">Explore 3D</button>
+    </div>
     <div class="status-chip" id="status-chip">Loading model...</div>
+    <section class="arch-loader-overlay" id="model-loader" role="status" aria-live="polite" aria-label="3D model loading progress">
+      <div class="loader-ring"></div>
+
+      <div class="loader-content">
+        <div class="loader-subtitle">CONSTRUCTING DIGITAL TWIN</div>
+        <div class="loader-percentage"><span id="model-loader-percent">0</span>%</div>
+      </div>
+
+      <div class="loader-fact-container">
+        <p class="loader-fact" id="model-loader-fact"></p>
+      </div>
+    </section>
   </main>
 
   <script type="module" src="./main.mjs"></script>

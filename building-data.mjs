@@ -3,7 +3,18 @@ export const buildings = [
     id: 'foguang-temple',
     name: 'Foguang Monastery',
     region: 'Shanxi, China',
-    position: { x: 57, y: 33 },
+    catalog: {
+      number: '01',
+      dynasty: 'Tang Dynasty',
+      typology: 'Monastery',
+      structure: 'Hip-and-gable timber hall',
+      yearLabel: '857 CE reconstruction',
+    },
+    stamp: {
+      componentCn: '柱头铺作',
+      componentEn: 'Column-head bracket set',
+    },
+    position: { x: 57, y: 49 },
     shape: 'temple',
     accent: 0xc5a35a,
     modelUrl: new URL('./assets/buildings/fogu-an-temple/model.glb', import.meta.url).href,
@@ -31,6 +42,17 @@ The name Foguang Si means "Temple of Buddha's Light." For centuries, that light 
     id: 'huize-confucian-temple',
     name: 'Huize Confucian Temple',
     region: 'Qujing, Yunnan, China',
+    catalog: {
+      number: '02',
+      dynasty: 'Qing Dynasty',
+      typology: 'Confucian Temple',
+      structure: 'Ritual courtyard hall',
+      yearLabel: '1721 CE foundation',
+    },
+    stamp: {
+      componentCn: '大成殿藻井',
+      componentEn: 'Dacheng Hall caisson',
+    },
     position: { x: 45, y: 69 },
     shape: 'courtyard',
     accent: 0x9fd8ca,
@@ -58,6 +80,17 @@ Beyond the main hall lies the Chongsheng Shrine, where a coffered ceiling featur
     id: 'hengling-pagoda',
     name: 'Wuhu Henglang Ancient Pagoda',
     region: 'Wuhu, Anhui, China',
+    catalog: {
+      number: '03',
+      dynasty: 'Southern Song',
+      typology: 'Pagoda',
+      structure: 'Hexagonal brick tower',
+      yearLabel: '13th century',
+    },
+    stamp: {
+      componentCn: '叠涩砖檐',
+      componentEn: 'Corbelled brick eave',
+    },
     position: { x: 66, y: 61 },
     shape: 'pagoda',
     accent: 0xb76b4c,
@@ -85,15 +118,208 @@ Local folklore adds a layer of mystique to the site. According to legend, the mo
 The Henglang Ancient Pagoda has outlasted the surrounding temples, surviving centuries of natural erosion, war, and political upheaval. Following extensive conservation efforts, it serves as a protected cultural landmark. On clear days, visitors boating on the Qingyi River can still see the ancient tower's reflection in the water, a quiet survivor of history continuing its watch over the valley.
 `.trim(),
   },
+  {
+    id: 'yingxian-wooden-pagoda',
+    name: 'Yingxian Wooden Pagoda',
+    region: 'Shuozhou, Shanxi, China',
+    catalog: {
+      number: '04',
+      dynasty: 'Liao Dynasty',
+      typology: 'Pagoda',
+      structure: 'Octagonal timber tower',
+      yearLabel: '1056 CE foundation',
+    },
+    stamp: {
+      componentCn: '明层平座',
+      componentEn: 'Exposed mezzanine',
+    },
+    position: { x: 55, y: 44 },
+    shape: 'pagoda',
+    accent: 0xc87455,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/yingxian-pagoda/model.glb',
+    summary: 'The oldest and tallest fully wooden pagoda in existence, standing without a single iron nail for nearly a millennium.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'Liao timber framing, octagonal plan'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `YINGXIAN
+WOODEN
+PAGODA`,
+    pretextKicker: 'Shanxi / Liao Timber',
+    pretextText: `Built in 1056 during the Liao Dynasty, the Sakyamuni Pagoda of Fogong Temple—commonly known as the Yingxian Wooden Pagoda—is a miracle of ancient engineering. Standing at 67.31 meters, it is the oldest and tallest fully wooden structure in the world.
+
+Despite enduring violent earthquakes, artillery fire, and centuries of weathering, its complex internal system of over 50 different types of dougong brackets has allowed it to flex and survive. Digital reconstruction of its immense internal structure is currently in progress.`.trim(),
+  },
+  {
+    id: 'hall-of-supreme-harmony',
+    name: 'Hall of Supreme Harmony',
+    region: 'Beijing, China',
+    catalog: {
+      number: '05',
+      dynasty: 'Ming & Qing Dynasty',
+      typology: 'Palace',
+      structure: 'Double-eave hip roof hall',
+      yearLabel: '1406 CE foundation (rebuilt 1695)',
+    },
+    stamp: {
+      componentCn: '重檐庑殿顶',
+      componentEn: 'Double-eave hip roof',
+    },
+    position: { x: 65, y: 38 },
+    shape: 'temple',
+    accent: 0xe6b325,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/hall-of-supreme-harmony/model.glb',
+    summary: 'The largest and most important hall within the Forbidden City, serving as the ceremonial center of imperial power.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'Imperial architecture, golden glazed tiles'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `HALL OF
+SUPREME
+HARMONY`,
+    pretextKicker: 'Beijing / Imperial Palace',
+    pretextText: `The Hall of Supreme Harmony (Taihedian) is the heart of the Forbidden City. Rising 35 meters above the sprawling marble courtyard, it is the largest surviving wooden palace structure in China.
+
+Crowned with a double-eave hip roof—the highest rank in traditional Chinese architectural hierarchy—and covered entirely in imperial yellow glazed tiles, it was here that emperors hosted enthronements, royal weddings, and the dispatch of generals. The digital twin for this massive structure is currently pending.`.trim(),
+  },
+  {
+    id: 'mogao-caves',
+    name: 'Mogao Caves',
+    region: 'Dunhuang, Gansu, China',
+    catalog: {
+      number: '07',
+      dynasty: 'Northern Wei to Yuan',
+      typology: 'Grottoes',
+      structure: 'Rock-cut architecture',
+      yearLabel: '366 CE foundation',
+    },
+    stamp: {
+      componentEn: 'Flying Apsaras Mural',
+    },
+    position: { x: 30, y: 35 },
+    shape: 'temple',
+    accent: 0xd2a679,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/mogao-caves/model.glb',
+    summary: 'A system of 492 temples and cave sanctuaries at a strategic point on the Silk Road, containing some of the finest examples of Buddhist art spanning 1,000 years.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'Silk Road cave sanctuary, mural archive'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `MOGAO
+CAVES`,
+    pretextKicker: 'Gansu / Silk Road Sanctuary',
+    pretextText: `At the edge of the Gobi, the Mogao Caves form a vast archive of Buddhist devotion, trade, and painted cosmology. Across nearly five hundred grottoes, murals and sculpture preserve a thousand years of artistic exchange along the Silk Road.
+
+Digital capture for this cliffside complex is still pending, but its presence on the atlas anchors the far northwest with a monument shaped by desert routes, merchants, monks, and memory.`.trim(),
+  },
+  {
+    id: 'potala-palace',
+    name: 'Potala Palace',
+    region: 'Lhasa, Tibet, China',
+    catalog: {
+      number: '08',
+      dynasty: 'Tang & Qing',
+      typology: 'Palace Fort',
+      structure: 'Stone and wood complex',
+      yearLabel: '1645 CE reconstruction',
+    },
+    stamp: {
+      componentEn: 'Red Palace Gable',
+    },
+    position: { x: 26, y: 56 },
+    shape: 'temple',
+    accent: 0xc62828,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/potala-palace/model.glb',
+    summary: 'The winter palace of the Dalai Lamas since the 7th century, symbolizing Tibetan Buddhism and its central role in the traditional administration of Tibet.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'High-altitude palace-fortress, white and red palaces'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `POTALA
+PALACE`,
+    pretextKicker: 'Lhasa / Tibetan Plateau',
+    pretextText: `Set high above Lhasa, the Potala Palace rises as both monastery and fortress, layered in white walls, red sanctuaries, and ceremonial stairways. It became the winter seat of the Dalai Lamas and remains one of the clearest architectural emblems of Tibetan Buddhism.
+
+Its addition to the atlas opens the western plateau, balancing the map with a monument whose silhouette belongs to mountain light, thin air, and sacred urban geography.`.trim(),
+  },
+  {
+    id: 'leifeng-pagoda',
+    name: 'Leifeng Pagoda',
+    region: 'Hangzhou, Zhejiang, China',
+    catalog: {
+      number: '09',
+      dynasty: 'Five Dynasties',
+      typology: 'Pagoda',
+      structure: 'Octagonal brick-wood tower',
+      yearLabel: '975 CE foundation',
+    },
+    stamp: {
+      componentEn: 'Golden Top Finial',
+    },
+    position: { x: 67, y: 58 },
+    shape: 'pagoda',
+    accent: 0x4db6ac,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/leifeng-pagoda/model.glb',
+    summary: 'Originally built in 975 AD, this five-story octagonal tower collapsed in 1924 and was rebuilt in 2002 as a modern marvel over the ancient ruins.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'West Lake landmark, octagonal tower profile'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `LEIFENG
+PAGODA`,
+    pretextKicker: 'Hangzhou / West Lake',
+    pretextText: `Leifeng Pagoda stands on the southern shore of West Lake, suspended between legend, ruin, and reconstruction. First raised in 975, it collapsed in the twentieth century and now survives as a rebuilt tower above the archaeological remains of the earlier pagoda.
+
+On the atlas it fills the Jiangnan waterlands, giving the southeast a landmark tied as much to literary memory and lakeside atmosphere as to masonry and timber form.`.trim(),
+  },
+  {
+    id: 'chen-ancestral-hall',
+    name: 'Chen Clan Ancestral Hall',
+    region: 'Guangzhou, Guangdong, China',
+    catalog: {
+      number: '10',
+      dynasty: 'Qing Dynasty',
+      typology: 'Ancestral Hall',
+      structure: 'Traditional courtyard complex',
+      yearLabel: '1894 CE foundation',
+    },
+    stamp: {
+      componentEn: 'Intricate Ridge Pottery',
+    },
+    position: { x: 58, y: 78 },
+    shape: 'courtyard',
+    accent: 0x8d6e63,
+    modelUrl: null,
+    expectedModelUrl: './assets/buildings/chen-ancestral-hall/model.glb',
+    summary: 'An academic temple in southern China, renowned for its exquisite "seven wonders" of decorative arts including wood, stone, and brick carving.',
+    facts: [
+      ['Model', 'Pending 3D digitization'],
+      ['Detail', 'Lingnan courtyard craft, ridge pottery, carving programs'],
+    ],
+    pretextNote: '3D scanning and digital reconstruction for this monument are currently underway.',
+    pretextTitle: `CHEN CLAN
+ANCESTRAL
+HALL`,
+    pretextKicker: 'Guangzhou / Lingnan Craft',
+    pretextText: `The Chen Clan Ancestral Hall gathers southern craftsmanship into one dense ceremonial compound. Its roofs, courtyards, and halls are celebrated for layered decorative programs in wood, brick, stone, plaster, and glazed ridge pottery.
+
+Placed in Guangzhou, it gives the far south of the atlas a richly urban Lingnan anchor instead of leaving the Pearl River zone visually empty.`.trim(),
+  },
 ]
 
 export const ambientSites = [
-  { name: 'Potala Palace', position: { x: 31, y: 49 } },
   { name: 'Shaolin Monastery', position: { x: 59, y: 45 } },
-  { name: 'Leifeng Pagoda', position: { x: 67, y: 58 } },
-  { name: 'Yingxian Wooden Pagoda', position: { x: 58, y: 35 } },
   { name: 'Giant Wild Goose Pagoda', position: { x: 53, y: 47 } },
-  { name: 'Zhaozhou Bridge', position: { x: 60, y: 39 } },
   { name: 'Yueyang Tower', position: { x: 59, y: 60 } },
   { name: 'Tengwang Pavilion', position: { x: 58, y: 63 } },
   { name: 'Penglai Pavilion', position: { x: 67, y: 34 } },

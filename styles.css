@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=Inter:wght@300;400&display=swap');
+
 :root {
   --paper: rgba(239, 232, 211, 0.92);
   --muted: rgba(239, 232, 211, 0.56);
@@ -66,6 +68,7 @@ body {
   text-wrap: nowrap;
   text-rendering: geometricPrecision;
   mix-blend-mode: screen;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .copy-line.is-visible {
@@ -171,16 +174,111 @@ body {
   position: absolute;
   right: 28px;
   bottom: 50px;
+  max-width: min(320px, calc(100vw - 56px));
   padding: 10px 14px;
   color: var(--muted);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(16, 13, 9, 0.52);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 11px;
-  line-height: 1;
+  line-height: 1.35;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  text-align: right;
   z-index: 4;
+}
+
+/* ==========================================================================
+   ArchAtlas Premium Loader Styles
+   ========================================================================== */
+
+.arch-loader-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: #0f0e0c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  color: #e5dcc5;
+  font-family: 'Inter', sans-serif;
+  transition: opacity 520ms ease, visibility 520ms ease;
+}
+
+.arch-loader-overlay.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-ring {
+  width: 140px;
+  height: 140px;
+  border: 1px solid rgba(229, 220, 197, 0.08);
+  border-top: 1px solid #c4a77d;
+  border-radius: 50%;
+  position: absolute;
+  top: calc(50% - 110px);
+  animation: loader-spin 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  box-shadow: 0 0 20px rgba(196, 167, 125, 0.05);
+}
+
+@keyframes loader-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader-content {
+  text-align: center;
+  margin-top: -60px;
+  z-index: 2;
+}
+
+.loader-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(197, 163, 90, 0.82);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.loader-percentage {
+  font-family: 'Playfair Display', serif;
+  font-size: 56px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  background: linear-gradient(180deg, #ffffff 0%, #c4a77d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 24px rgba(197, 163, 90, 0.15);
+}
+
+.loader-fact-container {
+  position: absolute;
+  bottom: 12%;
+  width: 80%;
+  max-width: 540px;
+  text-align: center;
+  min-height: 48px;
+  z-index: 2;
+}
+
+.loader-fact {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-style: italic;
+  color: #a8a090;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  margin: 0;
+}
+
+.loader-fact.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (max-width: 980px) {
@@ -215,4 +313,78 @@ body {
   .copy-title {
     font-size: 24px;
   }
+}
+
+/* ==========================================================================
+   阅读/探索 模式切换体验 (Read & Explore Modes)
+   ========================================================================== */
+
+.app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, transparent 35%, rgba(10, 8, 6, 0.85) 100%);
+  z-index: 1;
+  transition: opacity 0.8s ease;
+}
+
+.app.is-explore-mode::before {
+  opacity: 0;
+}
+
+.copy-layer {
+  transition: none;
+  z-index: 2;
+}
+
+.app.is-explore-mode .copy-layer {
+  opacity: 1;
+  filter: none;
+  pointer-events: none;
+}
+
+.mode-toggle {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background: rgba(16, 13, 9, 0.7);
+  border: 1px solid rgba(197, 163, 90, 0.3);
+  border-radius: 999px;
+  padding: 6px;
+  z-index: 10;
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: rgba(239, 232, 211, 0.5);
+  padding: 8px 24px;
+  border-radius: 999px;
+  font-family: 'Inter', "Helvetica Neue", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+  background: rgba(197, 163, 90, 0.15);
+  color: var(--paper);
+  box-shadow: 0 0 12px rgba(197, 163, 90, 0.2);
+}
+
+.status-chip {
+  bottom: 100px;
+}
+
+.scrub-track {
+  bottom: 100px;
 }

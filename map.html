@@ -9,6 +9,12 @@
 </head>
 <body>
   <main class="immersive-app">
+    <div class="view-switch" aria-label="Atlas view mode">
+      <button type="button" class="is-active" id="map-mode-button" aria-pressed="true">Map View</button>
+      <button type="button" id="index-mode-button" aria-pressed="false">Architectural Index</button>
+      <button type="button" id="footprint-mode-button" aria-pressed="false">My Footprint</button>
+    </div>
+
     <section class="world-stage" aria-labelledby="page-title">
       <div id="map-canvas-stage" class="map-canvas-stage"></div>
       <div id="marker-label-layer" class="marker-label-layer" aria-hidden="true"></div>
@@ -19,9 +25,112 @@
       </div>
 
       <div class="scene-hint">
-        <span>Drag to orbit</span>
-        <span>Click a beacon to focus</span>
+        <span id="primary-interaction-hint">Drag to orbit</span>
+        <span id="focus-interaction-hint">Click a beacon to focus</span>
         <button type="button" id="overview-button">Return to Map</button>
+      </div>
+
+      <div class="map-onboarding" id="map-onboarding" role="status" aria-live="polite">
+        <p class="map-onboarding__title">Move through the atlas</p>
+        <p id="map-onboarding-copy">Drag to orbit the 3D map. Click a beacon to focus.</p>
+        <button type="button" id="map-onboarding-dismiss">Got it</button>
+      </div>
+    </section>
+
+    <section class="architectural-index" id="architectural-index" aria-label="Architectural Index" aria-hidden="true">
+      <div class="index-shell">
+        <header class="index-header">
+          <div class="index-header__copy">
+            <p class="index-header__eyebrow">The Architectural Index</p>
+            <h2>Browse the atlas as a collectible field guide.</h2>
+          </div>
+          <div class="index-controls">
+            <div class="index-group-switch" aria-label="Group buildings by">
+              <button type="button" class="is-active" data-group-by="dynasty">Dynasty</button>
+              <button type="button" data-group-by="typology">Type</button>
+              <button type="button" data-group-by="structure">Structure</button>
+            </div>
+            <label class="index-search">
+              <span>Search the atlas</span>
+              <input type="search" id="index-search-input" placeholder="Temple, pagoda, Shanxi..." autocomplete="off">
+            </label>
+          </div>
+        </header>
+
+        <div class="index-layout">
+          <div class="index-results" id="index-results"></div>
+        </div>
+
+        <div class="index-modal-overlay" id="index-modal-overlay" aria-hidden="true">
+          <div class="index-modal">
+            <button class="modal-close-btn" id="modal-close-btn" aria-label="Close detail">×</button>
+            <div class="modal-content">
+              <p class="index-spotlight__eyebrow" id="modal-eyebrow"></p>
+              <h3 id="modal-title" class="modal-title"></h3>
+              <div class="index-spotlight__tags" id="modal-tags"></div>
+              <p class="index-spotlight__summary" id="modal-summary"></p>
+              <dl class="index-spotlight__facts" id="modal-facts"></dl>
+              <div class="index-spotlight__actions modal-actions">
+                <button id="modal-btn-map">Locate on Map</button>
+                <button id="modal-btn-3d">Enter 3D Detail</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="personal-footprint" id="personal-footprint" aria-label="Personal Footprint" aria-hidden="true">
+      <div class="footprint-shell">
+        <header class="footprint-header">
+          <div class="footprint-header__copy">
+            <p class="footprint-header__eyebrow">My Craft Ledger</p>
+            <h2>A personal travelogue of the monuments you have fully read in 3D.</h2>
+          </div>
+        </header>
+
+        <div class="footprint-layout">
+          <aside class="footprint-summary" aria-live="polite">
+            <div class="footprint-metrics">
+              <article>
+                <p>Collected</p>
+                <strong id="footprint-collected-count">0</strong>
+              </article>
+              <article>
+                <p>Remaining</p>
+                <strong id="footprint-remaining-count">0</strong>
+              </article>
+              <article>
+                <p>Completion</p>
+                <strong id="footprint-completion-rate">0%</strong>
+              </article>
+            </div>
+            <div class="footprint-page-guide">
+              <p class="guide-title">Spatial Travelogue</p>
+              <p class="guide-text">The glowing trail connects your discoveries in chronological order. Read monuments in 3D to collect seals and extend your path across the atlas.</p>
+            </div>
+            <p class="footprint-spotlight__eyebrow" id="footprint-spotlight-kicker"></p>
+            <h3 id="footprint-spotlight-name"></h3>
+            <p class="footprint-spotlight__stamp" id="footprint-spotlight-stamp"></p>
+            <p class="footprint-spotlight__summary" id="footprint-spotlight-summary"></p>
+            <div class="footprint-summary__actions">
+              <button type="button" id="footprint-show-map-button">Locate on Map</button>
+              <button type="button" id="footprint-open-detail-button">Continue in 3D</button>
+            </div>
+          </aside>
+
+          <div class="footprint-ledger">
+            <div class="footprint-ledger__header">
+              <p class="footprint-ledger__eyebrow">Travel Stamps</p>
+              <h3>Architectural seals and unfinished pages</h3>
+            </div>
+            <div class="footprint-stamp-grid" id="footprint-stamp-grid"></div>
+          </div>
+        </div>
+        <div class="footprint-onboarding-hint" id="footprint-onboarding-hint">
+          <p class="hint-title">Spatial Travelogue</p>
+          <p class="hint-copy">The glowing trail connects your discoveries in chronological order. Complete 3D reading circuits to extend your path across the atlas.</p>
+        </div>
       </div>
     </section>
 
