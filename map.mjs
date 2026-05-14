@@ -204,7 +204,7 @@ function addLights() {
 }
 
 function addWorld() {
-  const textureUrl = new URL('./Gemini_Generated_Image_3852yl3852yl3852.svg', import.meta.url).href
+  const textureUrl = new URL('./hand_drawn_map.svg', import.meta.url).href
   const texture = new THREE.TextureLoader().load(textureUrl, () => {
     texture.colorSpace = THREE.SRGBColorSpace
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
@@ -877,10 +877,13 @@ function renderPersonalFootprint() {
   const completedEntries = getCompletedEntries()
   const total = buildings.length
   const collected = completedEntries.length
+
   footprintCollectedCount.textContent = String(collected)
   footprintRemainingCount.textContent = String(Math.max(total - collected, 0))
   footprintCompletionRate.textContent = `${Math.round((collected / Math.max(total, 1)) * 100)}%`
   renderFootprintSpotlight()
+
+  footprintStampGrid.innerHTML = buildings.map(renderFootprintStampCard).join('')
 
   if (footprintTrailMesh) {
     scene.remove(footprintTrailMesh)
@@ -891,7 +894,6 @@ function renderPersonalFootprint() {
 
   if (collected < 2) {
     trailAnimationTime = 0
-    footprintStampGrid.innerHTML = ''
     return
   }
 
@@ -904,11 +906,7 @@ function renderPersonalFootprint() {
     points.push(new THREE.Vector3(worldPos.x, 0.4, worldPos.z))
   }
 
-  if (points.length < 2) {
-    trailAnimationTime = 0
-    footprintStampGrid.innerHTML = ''
-    return
-  }
+  if (points.length < 2) return
 
   const curve = new THREE.CatmullRomCurve3(points, false, 'chordal')
   const tubeGeometry = new THREE.TubeGeometry(curve, 64 * points.length, 0.04, 8, false)
@@ -924,7 +922,6 @@ function renderPersonalFootprint() {
   footprintTrailMesh.visible = activeView === 'footprint'
   trailAnimationTime = 0
   scene.add(footprintTrailMesh)
-  footprintStampGrid.innerHTML = ''
 }
 
 function renderFootprintStampCard(building) {
@@ -1165,7 +1162,9 @@ function requireElement(id) {
 }
 
 function escapeHtml(value) {
-  return value
+  if (!value) return ''
+
+  return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')

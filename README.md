@@ -1,128 +1,125 @@
-# pretext-3d
+<div align="center">
 
-`pretext-3d` is an open-source template for building editorial web pages where live 3D geometry actively shapes the text layout.
+# 🏛️ ArchAtlas: Ancient Architecture Atlas
 
-This is the important difference: the 3D model is not a background layer, and Pretext is not being used as a static text formatter. The visible silhouette of the model becomes a real layout constraint. As the camera moves, the occupied shape changes, the legal text slots change, and Pretext recomposes the copy so the page stays readable.
+**Reconnecting the building to the land, and the story to the space.**
 
-That makes this project more than a visual demo. It is a small layout engine for a type of web storytelling that is usually painful to build from scratch.
+![Three.js](https://img.shields.io/badge/Three.js-Black?style=for-the-badge&logo=three.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white)
+![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
 
-## Why This Matters
+<img src="./docs/images/archatlas-banner.png" alt="ArchAtlas Banner" width="800">
 
-Most so-called `3D + editorial` pages still work like posters:
+</div>
 
-- the 3D object is decorative
-- the text is placed in fixed columns
-- collisions are solved manually
-- every new model means another round of hand-tuned layout hacks
+> **📌 Grading & Review Notice (ENT208):**
+> This repository has changed direction. The `main` branch contains the final version of the project. The `old-version-backup` branch preserves the previous project for reference only. Please use `main` for new reviews, deployment, and grading.
 
-`pretext-3d` takes a different route.
+## 📖 The Name: Why "ArchAtlas"?
 
-It treats the rendered 3D subject as a live spatial obstacle and lets Pretext flow text around the current silhouette in real time. That is the conceptual jump. You are no longer placing copy on top of a scene. You are composing a page where geometry and typography negotiate with each other frame by frame.
+The name is a fusion of **Architecture** and **Atlas**.
+For too long, ancient buildings have been studied as isolated structures disconnected from their environment. An *Atlas* represents geography, landscape, and macro-context. By naming it **ArchAtlas**, we embed the physical architecture back into the grand map of Huaxia, allowing users to understand not just how a building stands, but *where* and *why* it stands there.
 
-For Pretext specifically, this shows a more radical use case than standard text layout. Instead of reflowing inside a rectangular text box, Pretext is driving copy through irregular, moving slots extracted from a 3D mask. In practice, that turns Pretext from a formatting utility into a programmable editorial layout system.
+## ✨ About The Project
 
-## Why This Is Useful
+**ArchAtlas** is a contour-aware interactive 3D web experience dedicated to Chinese architectural heritage.
 
-This pattern is valuable anywhere the object itself should structure the narrative:
+We move beyond traditional static text boxes. The project presents a cinematic hand-drawn map of historic sites, lets visitors focus on individual buildings, and opens a detailed 3D view where history literally flows around the live silhouette of each model. It combines high-fidelity 3D rendering with a dynamic typography system to create a digital heritage interface that is both visually striking and highly readable.
 
-- editorial storytelling
-- brand showcases
-- museum or exhibition microsites
-- architecture and product presentations
-- portfolio pages with stronger art direction
-- experimental publishing on the web
+## 📱 App Showcase
 
-The value is not just aesthetics. The value is that the page can stay legible while still feeling spatial, cinematic, and alive.
+### 1. The Huaxia Map (Geographic Context)
 
-Without a template like this, building the same effect is annoying in exactly the wrong ways:
+*Your journey starts on a grand landscape, not a search bar.*
 
-- you need to render and normalize a 3D model
-- you need a mask pipeline
-- you need to scan geometry occupancy into usable layout intervals
-- you need text reflow that can survive irregular line widths
-- you need motion that changes the composition without destroying readability
-- you need model-swap ergonomics so every new asset does not become a rewrite
+<img src="./docs/images/atlas-map-view.png" alt="Atlas Map View" width="600">
 
-That is the work this repository is trying to remove.
+### 2. Dual-Mode Interaction: Read Story & Explore 3D
 
-## What The Template Actually Does
+*Seamless transition from contour-aware reading to immersive 3D exploration.*
 
-At runtime, the system works like this:
+<p align="center">
+  <img src="./docs/images/read-story-mode.png" alt="Read Story Mode" width="400">
+  <img src="./docs/images/explore-3d-mode.png" alt="Explore 3D Mode" width="400">
+</p>
 
-1. Render a `glb` model with Three.js
-2. Render the same scene into a high-contrast black and white mask
-3. Scan each text band for occupied pixels
-4. Convert the remaining horizontal runs into legal line slots
-5. Ask Pretext for the next valid line inside each slot
-6. Reflow the copy again as the camera motion changes the silhouette
+## 🚀 Key Features
 
-Core flow:
+- **🗺️ Interactive 3D Atlas:** A beautifully rendered map with clickable heritage markers.
+- **🏔️ Contour-Aware Typography:** Text layout dynamically responds to and carves around the visible silhouette of the 3D model.
+- **🔄 Dual-Mode Viewing:** Easily switch between deep reading and free 3D inspection.
+- **🖐️ Immersive Controls:** Intuitive gesture controls for orbiting, zooming, and inspecting complex structures like *Dougong* brackets.
+- **⚡ Production Ready:** Highly optimized Vite build configuration, ready for fast CDN deployment.
 
-`GLB -> Three.js scene -> silhouette mask -> slot carving -> Pretext line layout -> positioned editorial copy`
+## 📍 Featured Heritage Sites
 
-## What You Get Out Of The Box
+- 🏯 **Foguang Monastery**, Shanxi (Tang Dynasty Timber)
+- 🏛️ **Huize Confucian Temple**, Yunnan (Qing Ritual Space)
+- 🗼 **Wuhu Henglang Ancient Pagoda**, Anhui (Material Memory)
 
-- a working `Three.js + Pretext` integration
-- live mask-based text exclusion from a moving 3D subject
-- a restrained horizontal scrub interaction that preserves readability
-- model normalization and framing hooks
-- adjustable layout quality controls such as mask padding and minimum slot width
-- private model workflow: `assets/model.glb` is expected locally but ignored by git
+## 🛠️ Tech Stack
 
-## Why Building This Yourself Is Annoying
+- **Core:** Three.js, Vanilla JavaScript (Modules)
+- **Layout Engine:** `@chenglou/pretext` for silhouette text-slot carving
+- **Build Tool:** Vite
+- **Deployment:** Netlify
 
-Individually, none of the parts are impossible. Together, they are easy to get wrong.
+---
 
-The hard part is not loading a model or rendering text. The hard part is getting all of these layers to cooperate:
+## 💻 Local Setup
 
-- the model has to be framed consistently
-- the mask has to be clean enough to produce usable slots
-- the slot carving has to ignore noisy fragments
-- the text engine has to accept constantly changing widths
-- the motion range has to feel alive without wrecking the composition
+1. **Install dependencies**
 
-That is why a reusable starting point matters here. If someone wants to explore `3D + Pretext`, this repository skips the boring and fragile integration work and gets them directly to the part that matters: choosing a subject, tuning the composition, and writing the page.
+   ```bash
+   pnpm install
+   ```
 
-## Stack
+2. **Run the local development server**
 
-- `Three.js`
-- `@chenglou/pretext`
-- `Vite`
+   ```bash
+   pnpm dev
+   ```
 
-## Getting Started
+3. **Explore locally**
 
-```bash
-pnpm install
-pnpm dev
-```
+   Open:
 
-Open `http://127.0.0.1:4173/`.
+   ```text
+   http://127.0.0.1:4173/
+   ```
 
-## Add Your Own Model
+   The root page will automatically redirect to the atlas map.
 
-Put your model at `assets/model.glb`.
+## 📦 Build & Deployment
 
-The `assets/` directory is kept in the repo, but `.glb` files are ignored, so you can work with private 3D assets without publishing them.
-
-When a new model looks wrong, the first places to touch are:
-
-- `normalizeModel()` in `main.mjs`
-- `SCRUB_RANGES` in `main.mjs`
-- `computeFitState()` in `main.mjs`
-- the layout quality knobs in `main.mjs` and `mask-layout.mjs`
-
-See `MODEL_SWAP.md` for the model tuning workflow.
-
-## Check
+Create a production build:
 
 ```bash
-pnpm check
 pnpm build
 ```
 
-## Key Files
+Run local checks before pushing:
 
-- `main.mjs` for scene setup, mask generation, camera motion, and layout orchestration
-- `mask-layout.mjs` for slot carving and layout helpers
-- `styles.css` for the visual system
-- `MODEL_SWAP.md` for model swap and tuning notes
+```bash
+pnpm check
+```
+
+Preview or upload the generated `dist` folder.
+
+### Netlify Deployment Configuration
+
+The included `netlify.toml` is configured with:
+
+- **Build command:** `pnpm build`
+- **Publish directory:** `dist`
+
+> **⚠️ Important Asset Note:**
+> The 3D model files are loaded through Vite asset URLs so they are included in the production build. If a model page shows `MODEL LOAD FAILED`, verify that the deployed `dist/assets` folder contains the generated `.glb` files. Do not upload the source folder directly if deploying manually.
+
+## 📂 Key Files Architecture
+
+- `map.html` and `map.mjs`: Power the grand atlas map experience.
+- `index.html` and `main.mjs`: Power the 3D detail and dual-mode view.
+- `building-data.mjs`: Stores site metadata, historical context, and model references.
+- `mask-layout.mjs`: Handles complex text-slot carving around model silhouettes.
+- `MODEL_SWAP.md`: Documentation for model replacement and tuning.
